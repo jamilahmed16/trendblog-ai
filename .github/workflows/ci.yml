@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    name: Server install and syntax check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - name: Smoke test security layer
+        run: |
+          APP_TOKEN=ci-token PORT=3100 node server.js &
+          sleep 2
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:3100/trends)" = "401"
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'x-app-token: ci-token' localhost:3100/trends)" = "200"

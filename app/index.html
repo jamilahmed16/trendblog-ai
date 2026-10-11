@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendBlog AI v5 - BestSportsMag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:   #0A0A0A;
+  --black-r: #111111;
+  --black-s: #1A1A1A;
+  --dg:      #2E2E2E;
+  --mg:      #555555;
+  --lg:      #C8C8C8;
+  --white:   #F5F5F5;
+  --lime:    #E8FF00;
+  --lime-d:  #C8DF00;
+  --blue:    #00B4FF;
+  --green:   #00CC66;
+  --red:     #FF4444;
+  --orange:  #FF9F1C;
+  --f-d:     'Barlow Condensed', sans-serif;
+  --f-b:     'Lora', serif;
+  --f-m:     'DM Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--lg);font-family:var(--f-b);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── Grid bg ── */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,255,0,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,0,.022) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* ── Top bar ── */
+.topbar{position:sticky;top:0;z-index:200;background:rgba(10,10,10,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--dg);padding:0 24px;height:56px;display:flex;align-items:center;gap:20px}
+.topbar-logo{font-family:var(--f-d);font-weight:900;font-size:20px;text-transform:uppercase;color:var(--white);letter-spacing:-.5px;flex-shrink:0}
+.topbar-logo span{color:var(--lime)}
+.topbar-tool{font-family:var(--f-m);font-size:9px;color:var(--mg);letter-spacing:.18em;text-transform:uppercase;border-left:1px solid var(--dg);padding-left:16px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.proxy-pill{display:flex;align-items:center;gap:6px;font-family:var(--f-m);font-size:9px;color:var(--mg);background:var(--black-r);border:1px solid var(--dg);padding:5px 10px;border-radius:3px}
+.proxy-dot{width:6px;height:6px;border-radius:50%;background:var(--dg);flex-shrink:0;transition:background .3s}
+.proxy-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+.proxy-dot.off{background:var(--red)}
+.proxy-dot.checking{background:var(--orange);animation:pulse .9s infinite}
+
+/* ── Stage pipeline ── */
+.pipeline-wrap{position:relative;z-index:1;padding:32px 24px 0;max-width:1100px;margin:0 auto}
+.pipeline{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--dg);background:var(--black-r);overflow:hidden}
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 8px 14px;gap:6px;cursor:pointer;border-right:1px solid var(--dg);transition:background .2s;position:relative;min-height:88px}
+.stage:last-child{border-right:none}
+.stage::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:transparent;transition:background .2s}
+.stage.done::before{background:var(--green)}
+.stage.active::before{background:var(--lime)}
+.stage:hover:not(.active){background:rgba(232,255,0,.03)}
+.stage.active{background:rgba(232,255,0,.05)}
+.stage-num{font-family:var(--f-m);font-size:8px;color:var(--mg);letter-spacing:.1em}
+.stage-label{font-family:var(--f-d);font-size:15px;font-weight:700;text-transform:uppercase;color:var(--lg);letter-spacing:.3px;transition:color .2s}
+.stage.active .stage-label{color:var(--lime)}
+.stage.done .stage-label{color:var(--green)}
+.stage-sub{font-family:var(--f-m);font-size:9px;color:var(--mg);text-align:center;line-height:1.4;letter-spacing:.04em}
+.stage-check{font-size:11px;color:var(--green);font-weight:700;display:none}
+.stage.done .stage-check{display:block}
+.stage-arrow{position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:var(--f-m);font-size:10px;color:var(--dg);z-index:2}
+.stage:last-child .stage-arrow{display:none}
+
+/* ── Stats bar ── */
+.stats-bar{max-width:1100px;margin:12px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.stat{background:var(--black-r);border:1px solid var(--dg);padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.stat-val{font-family:var(--f-d);font-size:24px;font-weight:900;line-height:1}
+.stat-lbl{font-family:var(--f-m);font-size:8px;color:var(--mg);text-transform:uppercase;letter-spacing:.12em}
+
+/* ── Main layout ── */
+.main{max-width:1100px;margin:20px auto 80px;padding:0 24px;position:relative;z-index:1}
+
+/* ── Panels ── */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── Cards ── */
+.card{background:var(--black-r);border:1px solid var(--dg);margin-bottom:12px}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--dg);background:var(--black-s)}
+.card-title{font-family:var(--f-m);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--lime)}
+.card-body{padding:16px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;font-family:var(--f-d);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;flex-shrink:0}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-lime{background:var(--lime);color:var(--black)}.btn-lime:hover:not(:disabled){background:var(--lime-d)}
+.btn-ghost{background:transparent;color:var(--lg);border:1px solid var(--dg)}.btn-ghost:hover:not(:disabled){border-color:var(--mg);color:var(--white)}
+.btn-green{background:var(--green);color:var(--black)}.btn-green:hover:not(:disabled){opacity:.88}
+.btn-sm{padding:7px 12px;font-size:12px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ── Form fields ── */
+label{font-family:var(--f-m);font-size:9px;color:var(--mg);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:5px}
+input,select,textarea{background:var(--black);border:1px solid var(--dg);color:var(--lg);font-family:var(--f-m);font-size:11px;padding:9px 12px;width:100%;outline:none;transition:border-color .15s;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--lime)}
+.field{margin-bottom:12px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Trend items ── */
+.trend-list{display:flex;flex-direction:column;gap:4px}
+.trend-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--dg);background:var(--black);cursor:pointer;transition:all .15s}
+.trend-item:hover{border-color:var(--mg);background:var(--black-r)}
+.trend-item.selected{border-color:var(--lime);background:rgba(232,255,0,.05)}
+.trend-rank{font-family:var(--f-m);font-size:10px;color:var(--dg);width:18px;flex-shrink:0;text-align:right}
+.trend-name{font-family:var(--f-d);font-size:16px;font-weight:700;text-transform:uppercase;color:var(--white);flex:1;letter-spacing:.3px}
+.trend-vol{font-family:var(--f-m);font-size:10px;color:var(--mg)}
+.badge{font-family:var(--f-m);font-size:8px;font-weight:700;padding:2px 7px;letter-spacing:.1em;text-transform:uppercase;border-radius:2px}
+.badge-breakout{background:#330000;color:#ff6b6b;border:1px solid #550000}
+.badge-hot{background:#2a1500;color:var(--orange);border:1px solid #443000}
+.badge-rising{background:#001a00;color:var(--green);border:1px solid #003300}
+.trend-time{font-family:var(--f-m);font-size:9px;color:var(--dg)}
+
+/* ── Source bar ── */
+.source-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--black);border:1px solid var(--dg);border-top:none;font-family:var(--f-m);font-size:9px;color:var(--mg)}
+.source-label{color:var(--green)}
+
+/* ── Selected topic display ── */
+.selected-topic{font-family:var(--f-d);font-size:20px;font-weight:800;text-transform:uppercase;color:var(--lime);padding:12px 16px;background:rgba(232,255,0,.05);border:1px solid rgba(232,255,0,.2);margin-bottom:10px;letter-spacing:.3px}
+.selected-topic.empty{color:var(--mg);background:var(--black);border-color:var(--dg)}
+
+/* ── Spinner / loading ── */
+.spinner{width:14px;height:14px;border:2px solid var(--dg);border-top-color:var(--lime);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:10px;padding:16px;font-family:var(--f-m);font-size:11px;color:var(--mg)}
+
+/* ── Progress bar ── */
+.progress-wrap{height:3px;background:var(--dg);overflow:hidden;margin-bottom:12px}
+.progress-fill{height:100%;background:var(--lime);transition:width .4s;width:0}
+
+/* ── Article type pills ── */
+.art-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.art-pill{padding:10px 12px;border:1px solid var(--dg);cursor:pointer;transition:all .15s;background:var(--black);text-align:center}
+.art-pill:hover{border-color:var(--mg)}
+.art-pill.active{border-color:var(--lime);background:rgba(232,255,0,.05)}
+.art-pill-name{font-family:var(--f-d);font-size:14px;font-weight:700;text-transform:uppercase;color:var(--white);display:block;margin-bottom:2px}
+.art-pill-sub{font-family:var(--f-m);font-size:8px;color:var(--mg);letter-spacing:.08em}
+
+/* ── Edit panel ── */
+.edit-field-title{font-family:var(--f-d);font-size:13px;font-weight:700;text-transform:uppercase;color:var(--lg);letter-spacing:.2px;padding:8px 0 4px;border-bottom:1px solid var(--dg);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.edit-hint{font-family:var(--f-m);font-size:9px;color:var(--mg);font-weight:400;text-transform:none;letter-spacing:0}
+#out-title-input{font-family:var(--f-d);font-size:20px;font-weight:800;text-transform:uppercase;color:var(--lime);padding:12px 14px;letter-spacing:.3px;border-color:rgba(232,255,0,.3)}
+#out-slug-input{font-family:var(--f-m);font-size:12px;color:var(--blue);border-color:rgba(0,180,255,.3)}
+#out-body-input{font-family:var(--f-m);font-size:11px;min-height:320px;color:var(--lg);line-height:1.75;border-color:var(--dg)}
+.char-count{font-family:var(--f-m);font-size:9px;color:var(--mg);text-align:right;margin-top:3px}
+
+/* ── SERP panel ── */
+.serp-panel{background:var(--black);border:1px solid var(--dg);padding:0;overflow:hidden;margin-top:10px;display:none}
+.serp-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--black-s);border-bottom:1px solid var(--dg)}
+.serp-body{padding:14px;max-height:360px;overflow-y:auto}
+.serp-section-title{font-family:var(--f-m);font-size:9px;color:var(--lime);text-transform:uppercase;letter-spacing:.14em;margin:12px 0 6px;padding-top:12px;border-top:1px solid var(--dg)}
+.serp-section-title:first-child{margin-top:0;padding-top:0;border-top:none}
+.serp-result{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.serp-result:last-child{border-bottom:none}
+.serp-result-title{font-family:var(--f-d);font-size:14px;font-weight:700;color:var(--white);margin-bottom:2px}
+.serp-result-url{font-family:var(--f-m);font-size:9px;color:var(--blue);margin-bottom:3px}
+.serp-result-desc{font-family:var(--f-m);font-size:10px;color:var(--mg);line-height:1.5}
+.paa-item{padding:8px 10px;background:rgba(232,255,0,.03);border:1px solid rgba(232,255,0,.08);margin-bottom:4px}
+.paa-q{font-family:var(--f-d);font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px}
+.paa-a{font-family:var(--f-m);font-size:10px;color:var(--mg);line-height:1.5}
+.related-tags{display:flex;flex-wrap:wrap;gap:5px}
+.related-tag{font-family:var(--f-m);font-size:9px;padding:3px 8px;border:1px solid var(--dg);color:var(--mg);cursor:pointer;transition:border-color .15s}
+.related-tag:hover{border-color:var(--mg);color:var(--lg)}
+
+/* ── HTML preview ── */
+.html-preview{background:var(--black);border:1px solid var(--dg);padding:14px;font-family:var(--f-m);font-size:10px;color:var(--mg);line-height:1.6;max-height:200px;overflow-y:auto;word-break:break-all;margin-top:8px}
+
+/* ── WP status ── */
+.wp-success{background:#001a00;border:1px solid #004400;color:var(--green);font-family:var(--f-m);font-size:11px;padding:10px 14px;margin-top:10px}
+.wp-error{background:#1a0000;border:1px solid #440000;color:var(--red);font-family:var(--f-m);font-size:11px;padding:10px 14px;margin-top:10px}
+.wp-info{background:#001a33;border:1px solid #003366;color:var(--blue);font-family:var(--f-m);font-size:11px;padding:10px 14px;margin-top:10px}
+
+/* ── Publish checklist ── */
+.checklist{display:flex;flex-direction:column;gap:8px}
+.check-item{display:flex;align-items:center;gap:10px;font-family:var(--f-m);font-size:11px;color:var(--mg);cursor:pointer;padding:8px 10px;border:1px solid transparent;transition:border-color .15s}
+.check-item:hover{border-color:var(--dg)}
+.check-item input{width:14px;height:14px;accent-color:var(--lime);flex-shrink:0}
+.check-item.checked{color:var(--green)}
+
+/* ── Settings ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Notifications ── */
+.notif{position:fixed;bottom:24px;right:24px;background:var(--black-r);border:1px solid var(--dg);border-left:3px solid var(--lime);padding:12px 16px;font-family:var(--f-m);font-size:11px;color:var(--lg);z-index:999;max-width:320px;transform:translateX(140%);transition:transform .3s}
+.notif.show{transform:none}
+.notif.error{border-left-color:var(--red)}
+.notif.success{border-left-color:var(--green)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--black)}
+::-webkit-scrollbar-thumb{background:var(--dg)}
+::-webkit-scrollbar-thumb:hover{background:var(--mg)}
+
+
+/* ── Optimize gauges ── */
+.opt-gauge{background:var(--black);border:1px solid var(--dg);padding:18px 14px;text-align:center;transition:border-color .2s}
+.opt-gauge.pass{border-color:var(--green)}
+.opt-gauge.fail{border-color:var(--red)}
+.opt-gauge-score{font-family:var(--f-d);font-size:42px;font-weight:900;line-height:1;color:var(--mg)}
+.opt-gauge.pass .opt-gauge-score{color:var(--green)}
+.opt-gauge.fail .opt-gauge-score{color:var(--red)}
+.opt-gauge-label{font-family:var(--f-d);font-size:16px;font-weight:700;text-transform:uppercase;color:var(--white);margin-top:6px;letter-spacing:.4px}
+.opt-gauge-sub{font-family:var(--f-m);font-size:9px;color:var(--mg);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+.opt-fix-group{margin-bottom:14px}
+.opt-fix-group-title{font-family:var(--f-m);font-size:9px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--dg)}
+.opt-fix-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--black);border:1px solid var(--dg);margin-bottom:4px}
+.opt-fix-x{color:var(--red);font-family:var(--f-m);font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.opt-fix-ok{color:var(--green);font-family:var(--f-m);font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.opt-fix-text{flex:1}
+.opt-fix-label{font-family:var(--f-d);font-size:14px;font-weight:600;color:var(--white)}
+.opt-fix-suggest{font-family:var(--f-m);font-size:10px;color:var(--mg);margin-top:2px;line-height:1.5}
+.opt-fix-btn{flex-shrink:0;font-family:var(--f-d);font-size:11px;font-weight:700;text-transform:uppercase;background:var(--blue);color:#000;border:none;padding:5px 10px;cursor:pointer}
+.opt-fix-btn:hover{opacity:.85}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@media(max-width:768px){
+  .pipeline{grid-template-columns:repeat(3,1fr)}
+  .stats-bar{grid-template-columns:repeat(3,1fr)}
+  .field-row{grid-template-columns:1fr}
+  .art-grid{grid-template-columns:1fr 1fr}
+  .settings-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<nav class="topbar">
+  <div class="topbar-logo">Best<span>Sports</span>Mag</div>
+  <div class="topbar-tool">TrendBlog AI v6.2.2 &mdash; World Cup 2026</div>
+  <div class="topbar-right">
+    <div class="proxy-pill">
+      <div class="proxy-dot checking" id="proxy-dot"></div>
+      <span id="proxy-txt">Connecting...</span>
+    </div>
+  </div>
+</nav>
+
+<!-- PIPELINE -->
+<div class="pipeline-wrap">
+  <div class="pipeline">
+    <div class="stage active" id="stage-1" onclick="switchStage(1)">
+      <div class="stage-num">01</div>
+      <div class="stage-label">Discover</div>
+      <div class="stage-sub">Live Google Trends</div>
+      <div class="stage-check">Done</div>
+      <div class="stage-arrow">&#8250;</div>
+    </div>
+    <div class="stage" id="stage-2" onclick="switchStage(2)">
+      <div class="stage-num">02</div>
+      <div class="stage-label">Research</div>
+      <div class="stage-sub">SERP + News + PAA</div>
+      <div class="stage-check">Done</div>
+      <div class="stage-arrow">&#8250;</div>
+    </div>
+    <div class="stage" id="stage-3" onclick="switchStage(3)">
+      <div class="stage-num">03</div>
+      <div class="stage-label">Generate</div>
+      <div class="stage-sub">Claude writes article</div>
+      <div class="stage-check">Done</div>
+      <div class="stage-arrow">&#8250;</div>
+    </div>
+    <div class="stage" id="stage-4" onclick="switchStage(4)">
+      <div class="stage-num">04</div>
+      <div class="stage-label">Optimize</div>
+      <div class="stage-sub">SEO &middot; GEO &middot; AI</div>
+      <div class="stage-check">Done</div>
+      <div class="stage-arrow">&#8250;</div>
+    </div>
+    <div class="stage" id="stage-5" onclick="switchStage(5)">
+      <div class="stage-num">05</div>
+      <div class="stage-label">Edit</div>
+      <div class="stage-sub">Review + adjust</div>
+      <div class="stage-check">Done</div>
+      <div class="stage-arrow">&#8250;</div>
+    </div>
+    <div class="stage" id="stage-6" onclick="switchStage(6)">
+      <div class="stage-num">06</div>
+      <div class="stage-label">Publish</div>
+      <div class="stage-sub">WordPress live</div>
+      <div class="stage-check">Done</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-val" style="color:var(--red)" id="st-days">6</div><div class="stat-lbl">Days to kickoff</div></div>
+  <div class="stat"><div class="stat-val" style="color:var(--lime)" id="st-gen">0</div><div class="stat-lbl">Generated</div></div>
+  <div class="stat"><div class="stat-val" style="color:var(--green)" id="st-pub">0</div><div class="stat-lbl">Published</div></div>
+  <div class="stat"><div class="stat-val" style="color:var(--orange)" id="st-remain">48</div><div class="stat-lbl">Articles needed</div></div>
+  <div class="stat"><div class="stat-val" style="color:var(--blue)" id="st-cost">$0.00</div><div class="stat-lbl">API spend</div></div>
+</div>
+
+<!-- MAIN PANELS -->
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════════════
+     STAGE 1 - DISCOVER
+═══════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-1">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Live Google Trends &mdash; Sports</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="loadTrends()">Refresh</button>
+        <select id="geo-select" style="width:auto;padding:6px 10px;font-size:10px;background:var(--black);border-color:var(--dg)" onchange="loadTrends()">
+          <option value="US">US</option>
+          <option value="GB">UK</option>
+          <option value="GLOBAL">Global</option>
+          <option value="BD">Bangladesh</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body" style="padding:10px">
+      <div id="trend-list" class="trend-list">
+        <div class="loading-row"><div class="spinner"></div>Loading live trends...</div>
+      </div>
+    </div>
+    <div id="trends-warn" style="display:none;background:#1a0000;border:1px solid #440000;border-top:none;color:#ff9999;font-family:var(--f-m);font-size:10px;padding:8px 12px"></div>
+    <div class="source-bar">
+      <span id="trends-source-label" class="source-label">Fetching...</span>
+      <span id="trends-time" style="font-family:var(--f-m);font-size:9px;color:var(--dg)"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Custom Keyword</div></div>
+    <div class="card-body">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="custom-kw" placeholder="e.g. World Cup 2026 Group B preview - England vs USA" style="flex:1">
+        <button class="btn btn-lime btn-sm" onclick="useCustomKw()">Use This</button>
+      </div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px" id="kw-suggestions"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Selected Topic</div></div>
+    <div class="card-body">
+      <div id="selected-display" class="selected-topic empty">No topic selected &mdash; click a trend above</div>
+      <div class="btn-row">
+        <button class="btn btn-lime" id="btn-go-research" onclick="goResearch()" disabled>Research This Topic &rarr;</button>
+        <button class="btn btn-ghost" onclick="switchStage(3);generateArticle()" id="btn-skip-to-gen" disabled>Skip to Generate</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STAGE 2 - RESEARCH (SERP)
+═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-2">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">SERP Analysis</div>
+      <button class="btn btn-ghost btn-sm" onclick="runSerp()">Re-run Analysis</button>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="serp-main-body" class="serp-body" style="max-height:480px">
+        <div class="loading-row"><div class="spinner"></div>Running SERP analysis...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-lime" onclick="switchStage(3);generateArticle()">Generate Article &rarr;</button>
+    <button class="btn btn-ghost" onclick="switchStage(1)">Back to Trends</button>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STAGE 3 - GENERATE
+═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-3">
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Article Settings</div></div>
+    <div class="card-body">
+      <div class="art-grid">
+        <div class="art-pill active" data-type="news" onclick="selectType(this)"><span class="art-pill-name">Breaking News</span><span class="art-pill-sub">Trending story</span></div>
+        <div class="art-pill" data-type="preview" onclick="selectType(this)"><span class="art-pill-name">Match Preview</span><span class="art-pill-sub">Prediction piece</span></div>
+        <div class="art-pill" data-type="guide" onclick="selectType(this)"><span class="art-pill-name">Complete Guide</span><span class="art-pill-sub">Explainer</span></div>
+        <div class="art-pill" data-type="analysis" onclick="selectType(this)"><span class="art-pill-name">Analysis</span><span class="art-pill-sub">Team or player</span></div>
+        <div class="art-pill" data-type="listicle" onclick="selectType(this)"><span class="art-pill-name">Best Of List</span><span class="art-pill-sub">Top 10 format</span></div>
+        <div class="art-pill" data-type="review" onclick="selectType(this)"><span class="art-pill-name">Gear Review</span><span class="art-pill-sub">Product review</span></div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Word Count</label>
+          <select id="word-count">
+            <option value="1200">1,200 words</option>
+            <option value="1600" selected>1,600 words</option>
+            <option value="2000">2,000 words</option>
+            <option value="2500">2,500 words</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Affiliate Links</label>
+          <select id="aff-type">
+            <option value="gear">Football gear (Impact.com)</option>
+            <option value="cards">Collectibles (Impact.com)</option>
+            <option value="amazon">Amazon Associates</option>
+            <option value="none">No affiliate links</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Target Audience</label>
+          <select id="audience">
+            <option value="global">Global football fans</option>
+            <option value="us">US soccer fans</option>
+            <option value="uk">UK football fans</option>
+            <option value="collectors">Card collectors</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tone</label>
+          <select id="tone">
+            <option value="editorial">Fast and editorial</option>
+            <option value="analytical">Data-driven</option>
+            <option value="conversational">Fan-focused</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Reference URLs <span style="font-family:var(--f-m);font-size:9px;color:var(--mg);font-weight:400;text-transform:none;letter-spacing:0">(optional - paste up to 5 source URLs)</span></div></div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:6px" id="ref-url-fields">
+        <input type="url" class="ref-url" placeholder="https://example.com/article-1" style="font-family:var(--f-m);font-size:11px">
+        <input type="url" class="ref-url" placeholder="https://example.com/article-2" style="font-family:var(--f-m);font-size:11px">
+        <input type="url" class="ref-url" placeholder="https://example.com/article-3" style="font-family:var(--f-m);font-size:11px">
+        <input type="url" class="ref-url" placeholder="https://example.com/article-4" style="font-family:var(--f-m);font-size:11px">
+        <input type="url" class="ref-url" placeholder="https://example.com/article-5" style="font-family:var(--f-m);font-size:11px">
+      </div>
+      <div id="ref-status" style="font-family:var(--f-m);font-size:10px;color:var(--mg);margin-top:8px;min-height:16px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title" id="gen-topic-label">Topic: None selected</div>
+      <div style="font-family:var(--f-m);font-size:9px;color:var(--mg)" id="gen-readtime"></div>
+    </div>
+    <div class="card-body">
+      <div id="gen-status" style="display:none">
+        <div class="progress-wrap"><div class="progress-fill" id="gen-progress"></div></div>
+        <div class="loading-row"><div class="spinner"></div><span id="gen-status-text">Initialising...</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-lime" id="btn-gen" onclick="generateArticle()">Generate Article</button>
+        <button class="btn btn-ghost" onclick="switchStage(2)">View SERP First</button>
+        <button class="btn btn-ghost" onclick="switchStage(1)">Change Topic</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STAGE 4 - OPTIMIZE (SEO / GEO / AI scoring gate)
+═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-4">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Optimization Score &mdash; Guidance</div>
+      <button class="btn btn-ghost btn-sm" onclick="runOptimize()">Re-run Scoring</button>
+    </div>
+    <div class="card-body">
+      <div id="opt-loading" style="display:none">
+        <div class="loading-row"><div class="spinner"></div>Analysing SEO, GEO and AI-search signals...</div>
+      </div>
+
+      <!-- 3 score gauges -->
+      <div id="opt-gauges" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+        <div class="opt-gauge" id="gauge-seo">
+          <div class="opt-gauge-score" id="seo-score">--</div>
+          <div class="opt-gauge-label">SEO</div>
+          <div class="opt-gauge-sub">Google ranking</div>
+        </div>
+        <div class="opt-gauge" id="gauge-geo">
+          <div class="opt-gauge-score" id="geo-score">--</div>
+          <div class="opt-gauge-label">GEO</div>
+          <div class="opt-gauge-sub">AI Overviews</div>
+        </div>
+        <div class="opt-gauge" id="gauge-ai">
+          <div class="opt-gauge-score" id="ai-score">--</div>
+          <div class="opt-gauge-label">AI / LLM</div>
+          <div class="opt-gauge-sub">ChatGPT, Perplexity</div>
+        </div>
+        <div class="opt-gauge" id="gauge-grounding">
+          <div class="opt-gauge-score" id="grounding-score">--</div>
+          <div class="opt-gauge-label">Grounding</div>
+          <div class="opt-gauge-sub">Gate 70 &middot; facts sourced</div>
+        </div>
+      </div>
+
+      <div id="dfseo-panel" style="display:none;background:var(--black);border:1px solid var(--dg);padding:14px 16px;margin-bottom:14px"></div>
+      <div id="opt-verdict" style="font-family:var(--f-m);font-size:11px;padding:10px 14px;margin-bottom:14px;display:none"></div>
+
+      <!-- Failed checks with fixes -->
+      <div id="opt-fixes"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-lime" id="btn-opt-continue" onclick="switchStage(5)">Continue to Edit &rarr;</button>
+        <button class="btn btn-ghost" onclick="switchStage(3)">Back to Generate</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STAGE 5 - EDIT
+═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-5">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Edit Article</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="generateArticle()">Regenerate</button>
+        <button class="btn btn-ghost btn-sm" onclick="showSerpInline()">SERP Analysis</button>
+        <button class="btn btn-ghost btn-sm" onclick="switchStage(4)" style="border-color:rgba(0,180,255,.4);color:var(--blue)">Optimize Scores</button>
+        <button class="btn btn-lime btn-sm" onclick="switchStage(6)">Looks Good &rarr; Publish</button>
+      </div>
+    </div>
+    <div id="live-score-strip" style="display:flex;align-items:center;gap:20px;padding:10px 16px;background:var(--black);border-bottom:1px solid var(--dg);"></div>
+    <div class="card-body">
+
+      <!-- SEO Title -->
+      <div class="edit-field-title">SEO Title <span class="edit-hint">Edit freely - this becomes your H1 and page title</span></div>
+      <input type="text" id="out-title-input" placeholder="Article title here..." oninput="state.title=this.value;markDirty();liveScore()">
+
+      <!-- Slug -->
+      <div class="edit-field-title" style="margin-top:10px">URL Slug <span class="edit-hint">Auto-cleaned to lowercase-hyphenated</span></div>
+      <input type="text" id="out-slug-input" placeholder="article-slug-here" oninput="syncSlug(this.value);markDirty();liveScore()">
+
+      <!-- Meta -->
+      <div class="edit-field-title" style="margin-top:10px">Meta Description <span class="edit-hint">150-155 chars for best SEO</span></div>
+      <textarea id="out-meta-input" rows="2" placeholder="Meta description..." oninput="state.meta=this.value;updateCharCount();markDirty();liveScore()"></textarea>
+      <div class="char-count"><span id="meta-chars">0</span>/155 chars</div>
+
+      <!-- Body -->
+      <div class="edit-field-title" style="margin-top:10px">Article Body <span class="edit-hint">Markdown - edits update HTML preview live</span></div>
+      <textarea id="out-body-input" rows="22" placeholder="Article body will appear here after generation..." oninput="state.content=this.value;livePreview();markDirty();liveScore()"></textarea>
+
+      <!-- Inline SERP -->
+      <div class="serp-panel" id="serp-inline">
+        <div class="serp-head">
+          <span style="font-family:var(--f-m);font-size:9px;color:var(--lime);text-transform:uppercase;letter-spacing:.14em">SERP Analysis &mdash; <span id="serp-kw-show"></span></span>
+          <button onclick="document.getElementById('serp-inline').style.display='none'" class="btn btn-ghost btn-sm">Close</button>
+        </div>
+        <div class="serp-body" id="serp-inline-body">Loading...</div>
+      </div>
+
+      <!-- HTML preview -->
+      <!-- QA RESULTS PANEL -->
+      <div id="qa-panel" style="display:none;margin-top:12px;background:var(--black);border:1px solid var(--blue);border-radius:0;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#001a33;border-bottom:1px solid var(--blue)">
+          <span style="font-family:var(--f-m);font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.14em">QA / QC Report</span>
+          <button onclick="document.getElementById('qa-panel').style.display='none'" class="btn btn-ghost btn-sm">Close</button>
+        </div>
+        <div id="qa-body" style="padding:14px"></div>
+      </div>
+
+      <div class="edit-field-title" style="margin-top:12px">HTML Preview <span class="edit-hint">What gets published to WordPress</span></div>
+      <div class="html-preview" id="out-html-preview"></div>
+
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-lime" id="btn-update" onclick="updateArticle()" style="min-width:140px">Update Article</button>
+        <button class="btn btn-green" id="btn-go-publish" onclick="switchStage(6)" style="min-width:180px">Publish to WordPress &rarr;</button>
+        <button class="btn btn-ghost" onclick="copyHtml()">Copy HTML</button>
+        <button class="btn btn-ghost" onclick="copyAll()">Copy All Fields</button>
+        <button class="btn btn-ghost" onclick="generateArticle()">Regenerate</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STAGE 5 - PUBLISH
+═══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-6">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">WordPress Connection</div></div>
+        <div class="card-body">
+          <div class="field">
+            <label>Site URL</label>
+            <input type="text" id="wp-url" value="https://bestsportsmag.com">
+          </div>
+          <div class="field">
+            <label>Username</label>
+            <input type="text" id="wp-user" value="bsmeditorialstaff">
+          </div>
+          <div class="field">
+            <label>Application Password</label>
+            <input type="password" id="wp-pass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx">
+          </div>
+          <div class="field">
+            <label>Category ID</label>
+            <input type="text" id="wp-cat" placeholder="e.g. 5 (World Cup 2026)">
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" onclick="testWP()">Test Connection</button>
+          </div>
+          <div id="wp-test-result"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Article to Publish</div></div>
+        <div class="card-body">
+          <div style="font-family:var(--f-m);font-size:10px;color:var(--mg);line-height:2">
+            Title: <strong style="color:var(--lime)" id="pub-title-preview">-</strong><br>
+            Slug: <strong style="color:var(--blue)" id="pub-slug-preview">-</strong><br>
+            Words: <strong style="color:var(--white)" id="pub-words">-</strong><br>
+            FAQs: <strong style="color:var(--white)" id="pub-faqs">-</strong><br>
+            Status: <strong id="pub-status" style="color:var(--mg)">Draft</strong>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-green" id="btn-publish" onclick="publishWP()">Publish Live Now</button>
+            <button class="btn btn-ghost btn-sm" onclick="switchStage(5)">Back to Edit</button>
+          </div>
+          <div id="pub-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Post-Publish Checklist</div></div>
+        <div class="card-body">
+          <div class="checklist">
+            <label class="check-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"> Set featured image in WordPress</label>
+            <label class="check-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"> Replace affiliate link placeholders with Impact.com tracking URLs</label>
+            <label class="check-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"> Replace internal link placeholders with real post URLs</label>
+            <label class="check-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"> Add Yoast SEO meta description</label>
+            <label class="check-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"> Assign correct category and tags</label>
+            <label class="check-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"> Share to social channels</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Session</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:6px;font-family:var(--f-m);font-size:10px;color:var(--mg);line-height:2">
+            Generated this session: <strong style="color:var(--white)" id="sess-gen">0</strong>
+            Published this session: <strong style="color:var(--green)" id="sess-pub">0</strong>
+            Est. API cost: <strong style="color:var(--lime)" id="sess-cost">$0.00</strong>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" onclick="switchStage(1)">New Article</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings inline -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Quick Settings</div></div>
+        <div class="card-body">
+          <div class="field">
+            <label>Proxy URL</label>
+            <input type="text" id="proxy-url" value="http://localhost:3000" onchange="PROXY=this.value">
+          </div>
+          <div class="field">
+            <label>Access token (APP_TOKEN)</label>
+            <input type="password" id="app-token" autocomplete="off" onchange="APP_TOKEN=this.value">
+          </div>
+          <div class="field">
+            <label>Publication Name</label>
+            <input type="text" id="pub-name" value="BestSportsMag">
+          </div>
+          <div class="field">
+            <label>Author Byline</label>
+            <input type="text" id="pub-author" value="BSM Editorial Staff">
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="checkProxy()">Check Proxy</button>
+          <div id="proxy-check-result" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- NOTIFICATION TOAST -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+var PROXY = 'http://localhost:3000';
+var APP_TOKEN = '';
+/* Wrap fetch so every proxy call carries the shared secret */
+var _origFetch = window.fetch;
+window.fetch = function(url, opts) {
+  opts = opts || {};
+  if (typeof url === 'string' && url.indexOf(PROXY) === 0) {
+    var tokenEl = document.getElementById('app-token');
+    var t = (tokenEl && tokenEl.value) || APP_TOKEN;
+    opts.headers = Object.assign({}, opts.headers || {}, { 'x-app-token': t });
+  }
+  return _origFetch.call(window, url, opts);
+};
+var state = {
+  topic:   '',
+  title:   '',
+  slug:    '',
+  meta:    '',
+  content: '',
+  html:    '',
+  tags:    [],
+  faq:     [],
+  artType: 'news',
+  genCount: 0,
+  pubCount: 0,
+  cost:     0,
+  qa:       null,
+  scores:   null,
+  quickAnswer:   '',
+  takeaways:     [],
+  internalLinks: [],
+  refContent:    [],
+  dfseo:         null
+};
+var PUBLISH_THRESHOLD = 85;
+var GROUNDING_THRESHOLD = 70;
+var serpCache = null;
+var currentStage = 1;
+var stageDone = [false, false, false, false, false, false];
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  checkProxy();
+  loadTrends();
+  loadKwSuggestions();
+  updateDaysCounter();
+});
+
+function updateDaysCounter() {
+  var kickoff = new Date('2026-06-11');
+  var now = new Date();
+  var days = Math.max(0, Math.ceil((kickoff - now) / 86400000));
+  var el = document.getElementById('st-days');
+  if (el) el.textContent = days;
+}
+
+// ═══════════════════════════════════════════════════════
+// PROXY
+// ═══════════════════════════════════════════════════════
+function checkProxy() {
+  PROXY = document.getElementById('proxy-url').value.trim().replace(/\/$/,'');
+  var dot = document.getElementById('proxy-dot');
+  var txt = document.getElementById('proxy-txt');
+  dot.className = 'proxy-dot checking';
+  txt.textContent = 'Connecting...';
+  fetch(PROXY + '/')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      dot.className = 'proxy-dot on';
+      txt.textContent = d.version || 'Online';
+    })
+    .catch(function() {
+      dot.className = 'proxy-dot off';
+      txt.textContent = 'Offline';
+    });
+}
+
+document.getElementById('proxy-url').addEventListener('change', function() {
+  PROXY = this.value.trim().replace(/\/$/,'');
+  checkProxy();
+});
+
+// ═══════════════════════════════════════════════════════
+// STAGE NAVIGATION
+// ═══════════════════════════════════════════════════════
+function switchStage(n) {
+  currentStage = n;
+  document.querySelectorAll('.panel').forEach(function(p, i) {
+    p.classList.toggle('active', i + 1 === n);
+  });
+  document.querySelectorAll('.stage').forEach(function(s, i) {
+    s.classList.remove('active');
+    s.classList.toggle('done', stageDone[i]);
+    if (i + 1 === n) s.classList.add('active');
+  });
+  if (n === 4) runOptimize();
+  if (n === 5 && state.content) { var d = computeScores(); state.scores = d; renderLiveStrip(d); }
+  if (n === 6) updatePublishPreview();
+}
+
+function markStageDone(n) {
+  stageDone[n - 1] = true;
+  var el = document.getElementById('stage-' + n);
+  if (el) el.classList.add('done');
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 1 - TRENDS
+// ═══════════════════════════════════════════════════════
+function loadTrends() {
+  var list   = document.getElementById('trend-list');
+  var srcLbl = document.getElementById('trends-source-label');
+  var timeLbl = document.getElementById('trends-time');
+  list.innerHTML = '<div class="loading-row"><div class="spinner"></div>Fetching live trends...</div>';
+  srcLbl.textContent = 'Fetching...';
+
+  var geo = document.getElementById('geo-select').value;
+
+  fetch(PROXY + '/trends?geo=' + geo + '&_=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      srcLbl.textContent = d.source || 'unknown';
+      timeLbl.textContent = new Date().toLocaleTimeString();
+
+      var warn = document.getElementById('trends-warn');
+      if (warn) {
+        if (d.source === 'fallback') {
+          warn.style.display = 'block';
+          warn.textContent = 'Live trends unavailable' + (d.lastError ? ' - ' + d.lastError : '') + ' - showing curated fallback topics';
+        } else {
+          warn.style.display = 'none';
+        }
+      }
+
+      if (!d.trends || !d.trends.length) {
+        list.innerHTML = '<div style="padding:16px;font-family:var(--f-m);font-size:11px;color:var(--mg)">No trends returned. Try refreshing.</div>';
+        return;
+      }
+
+      list.innerHTML = d.trends.map(function(t, i) {
+        var badgeCls = 'badge-' + (t.badge || 'rising');
+        return '<div class="trend-item" onclick="selectTrend(this,\'' + escJs(t.name) + '\')">'
+          + '<div class="trend-rank">' + (i + 1) + '</div>'
+          + '<div class="trend-name">' + escHtml(t.name) + '</div>'
+          + '<div class="trend-vol">' + (t.vol || '') + '</div>'
+          + '<span class="badge ' + badgeCls + '">' + (t.badge || 'rising').toUpperCase() + '</span>'
+          + '<div class="trend-time">' + (t.started || '') + '</div>'
+          + '</div>';
+      }).join('');
+    })
+    .catch(function(e) {
+      list.innerHTML = '<div style="padding:16px;font-family:var(--f-m);font-size:11px;color:var(--red)">Failed: ' + e.message + '</div>';
+      srcLbl.textContent = 'Error';
+    });
+}
+
+function selectTrend(el, name) {
+  document.querySelectorAll('.trend-item').forEach(function(i) { i.classList.remove('selected'); });
+  el.classList.add('selected');
+  setTopic(name);
+}
+
+function setTopic(name) {
+  state.topic = name;
+  var disp = document.getElementById('selected-display');
+  disp.textContent = name;
+  disp.className = 'selected-topic';
+  document.getElementById('btn-go-research').disabled = false;
+  document.getElementById('btn-skip-to-gen').disabled = false;
+  document.getElementById('gen-topic-label').textContent = 'Topic: ' + name;
+  updateReadtime();
+  notify('Topic selected: ' + name.slice(0, 60));
+}
+
+function useCustomKw() {
+  var kw = document.getElementById('custom-kw').value.trim();
+  if (!kw) return;
+  setTopic(kw);
+}
+
+function goResearch() {
+  if (!state.topic) { notify('Select a topic first', 'error'); return; }
+  switchStage(2);
+  runSerp();
+}
+
+function loadKwSuggestions() {
+  var ideas = [
+    'World Cup 2026 host cities complete guide',
+    'England vs USA World Cup 2026 preview',
+    'World Cup 2026 group stage predictions',
+    'Best World Cup 2026 kits ranked',
+    'Messi final World Cup 2026 legacy',
+    'World Cup 2026 tickets prices guide',
+    'Top scorers World Cup 2026 predictions',
+    'World Cup 2026 dark horse teams'
+  ];
+  document.getElementById('kw-suggestions').innerHTML = ideas.map(function(kw) {
+    return '<div class="related-tag" onclick="document.getElementById(\'custom-kw\').value=\'' + escJs(kw) + '\'">' + kw + '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 2 - SERP RESEARCH
+// ═══════════════════════════════════════════════════════
+function runSerp() {
+  if (!state.topic) { notify('Select a topic first', 'error'); return; }
+  var body = document.getElementById('serp-main-body');
+  body.innerHTML = '<div class="loading-row"><div class="spinner"></div>Analysing SERP for: ' + escHtml(state.topic) + '</div>';
+
+  fetch(PROXY + '/serp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keyword: state.topic })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      serpCache = d;
+      body.innerHTML = renderSerpHtml(d);
+      markStageDone(2);
+    })
+    .catch(function(e) {
+      body.innerHTML = '<div style="padding:16px;color:var(--red);font-family:var(--f-m);font-size:11px">SERP failed: ' + e.message + '</div>';
+    });
+}
+
+function renderSerpHtml(d) {
+  var html = '<div style="font-family:var(--f-m);font-size:9px;color:var(--mg);margin-bottom:10px">Source: '
+    + (d.source || 'unknown') + ' &mdash; ' + (d.total || 0) + ' results for: <strong style="color:var(--lg)">' + escHtml(d.keyword || state.topic) + '</strong></div>';
+
+  if (d.paa && d.paa.length) {
+    html += '<div class="serp-section-title">People Also Ask (' + d.paa.length + ')</div>';
+    html += d.paa.map(function(p) {
+      return '<div class="paa-item"><div class="paa-q">' + escHtml(p.q) + '</div>'
+        + (p.a ? '<div class="paa-a">' + escHtml(p.a.slice(0, 250)) + '</div>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  if (d.results && d.results.length) {
+    html += '<div class="serp-section-title">Top Ranking Pages</div>';
+    html += d.results.map(function(r, i) {
+      return '<div class="serp-result">'
+        + '<div class="serp-result-title">' + (i + 1) + '. ' + escHtml(r.title) + '</div>'
+        + '<div class="serp-result-url">' + escHtml((r.url || '').slice(0, 90)) + '</div>'
+        + '<div class="serp-result-desc">' + escHtml((r.description || '').slice(0, 200)) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  if (d.related && d.related.length) {
+    html += '<div class="serp-section-title">Related Searches</div>';
+    html += '<div class="related-tags">'
+      + d.related.map(function(s) { return '<div class="related-tag">' + escHtml(s) + '</div>'; }).join('')
+      + '</div>';
+  }
+
+  return html;
+}
+
+function showSerpInline() {
+  var panel = document.getElementById('serp-inline');
+  var body  = document.getElementById('serp-inline-body');
+  var kw    = document.getElementById('serp-kw-show');
+  kw.textContent = state.topic;
+  panel.style.display = 'block';
+
+  if (serpCache) { body.innerHTML = renderSerpHtml(serpCache); return; }
+
+  body.innerHTML = '<div class="loading-row"><div class="spinner"></div>Running SERP...</div>';
+  fetch(PROXY + '/serp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keyword: state.topic })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { serpCache = d; body.innerHTML = renderSerpHtml(d); })
+    .catch(function(e) { body.innerHTML = '<div style="color:var(--red);font-family:var(--f-m);font-size:11px">Failed: ' + e.message + '</div>'; });
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 3 - GENERATE
+// ═══════════════════════════════════════════════════════
+var selectedArtType = 'news';
+function selectType(el) {
+  document.querySelectorAll('.art-pill').forEach(function(p) { p.classList.remove('active'); });
+  el.classList.add('active');
+  selectedArtType = el.dataset.type;
+}
+
+function updateReadtime() {
+  var wc = parseInt(document.getElementById('word-count').value) || 1600;
+  var mins = Math.ceil(wc / 238);
+  var el = document.getElementById('gen-readtime');
+  if (el) el.textContent = mins + ' min read · ~' + wc + ' words';
+}
+
+document.getElementById('word-count').addEventListener('change', updateReadtime);
+
+async function generateArticle() {
+  if (!state.topic) { notify('No topic selected', 'error'); return; }
+  switchStage(3);
+
+  var btn    = document.getElementById('btn-gen');
+  var status = document.getElementById('gen-status');
+  var stxt   = document.getElementById('gen-status-text');
+  var prog   = document.getElementById('gen-progress');
+
+  btn.disabled = true;
+  status.style.display = 'block';
+
+  var steps = [
+    [8,  'Reading reference URLs...'],
+    [20, 'Fetching reference content...'],
+    [35, 'Building SERP context...'],
+    [50, 'Building enriched system prompt...'],
+    [68, 'Claude is writing your article...'],
+    [85, 'Parsing and styling HTML...'],
+    [95, 'Almost done...']
+  ];
+
+  var stepIdx = 0;
+  var progInterval = setInterval(function() {
+    if (stepIdx < steps.length) {
+      prog.style.width = steps[stepIdx][0] + '%';
+      stxt.textContent = steps[stepIdx][1];
+      stepIdx++;
+    }
+  }, 3000);
+
+  // ── Step 1: Collect reference URLs ──
+  var refUrls = Array.from(document.querySelectorAll('.ref-url'))
+    .map(function(inp) { return inp.value.trim(); })
+    .filter(function(u) { return u && (u.startsWith('http://') || u.startsWith('https://')); });
+
+  var refContent = [];
+  var refStatusEl = document.getElementById('ref-status');
+
+  if (refUrls.length > 0) {
+    if (refStatusEl) refStatusEl.textContent = 'Fetching ' + refUrls.length + ' reference URL(s)...';
+    prog.style.width = '12%';
+    stxt.textContent = 'Fetching ' + refUrls.length + ' reference URL(s)...';
+    try {
+      var refResp = await fetch(PROXY + '/fetch-refs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: refUrls })
+      });
+      var refData = await refResp.json();
+      refContent = refData.results || [];
+      state.refContent = refContent;
+      var successCount = refData.successful || 0;
+      if (refStatusEl) refStatusEl.textContent = successCount + ' of ' + refUrls.length + ' URLs fetched successfully';
+      if (successCount > 0) notify(successCount + ' reference URL(s) loaded', 'success');
+    } catch(e) {
+      if (refStatusEl) refStatusEl.textContent = 'URL fetch failed: ' + e.message;
+    }
+  } else {
+    if (refStatusEl) refStatusEl.textContent = '';
+  }
+
+  var wc      = document.getElementById('word-count').value;
+  var affType = document.getElementById('aff-type').value;
+  var aud     = document.getElementById('audience').value;
+  var tone    = document.getElementById('tone').value;
+  var pubName = document.getElementById('pub-name').value || 'BestSportsMag';
+  var author  = document.getElementById('pub-author').value || 'BSM Editorial Staff';
+
+  var affGuide = {
+    gear:    'Include 2-3 [AFFILIATE: Product Name - $Price - Brand - via Impact.com] placeholders for Adidas, Nike, Puma football gear.',
+    cards:   'Include 2-3 [AFFILIATE: Product Name - $Price - Topps/Panini - via Impact.com] placeholders for collectibles.',
+    amazon:  'Include 2-3 [AMAZON: Product Name - $Price] placeholders for relevant Amazon products.',
+    none:    'No affiliate link placeholders needed.'
+  }[affType] || '';
+
+  var toneGuide = {
+    editorial:     'Write fast, punchy editorial prose. Short paragraphs. Strong lede. No filler.',
+    analytical:    'Data-driven, cite numbers and context. Structured analysis.',
+    conversational:'Fan-focused, passionate voice. Write like a knowledgeable supporter.'
+  }[tone] || '';
+
+  var typeGuide = {
+    news:     'Breaking news format: 5Ws in first paragraph, context in middle, reaction/quote section, outlook.',
+    preview:  'Match preview: team form, key players, head-to-head, predicted lineups, score prediction.',
+    guide:    'Complete guide format: introduction, main sections as H2, practical tips, FAQ.',
+    analysis: 'Deep analysis: tactical breakdown, statistical context, expert observations.',
+    listicle: 'Numbered best-of list: intro, numbered items with subheadings, comparison, verdict.',
+    review:   'Product review: overview, performance, value, pros/cons, verdict with affiliate CTA.'
+  }[selectedArtType] || '';
+
+  var fixNote = state._fixInstruction ? ('\n\nIMPORTANT FIX FROM LAST REVIEW: ' + state._fixInstruction + '\nAddress this specifically in this version.\n') : '';
+  state._fixInstruction = null;
+  var prompt = 'Write a complete ' + wc + '-word SEO article about: "' + state.topic + '"' + fixNote + '\n\n'
+    + 'ARTICLE TYPE: ' + (selectedArtType) + ' - ' + typeGuide + '\n'
+    + 'TARGET AUDIENCE: ' + aud + ' sports fans\n'
+    + 'TONE: ' + toneGuide + '\n'
+    + 'PUBLICATION: ' + pubName + ' (bestsportsmag.com)\n'
+    + 'AUTHOR: ' + author + '\n\n'
+    + 'AFFILIATE: ' + affGuide + '\n\n'
+    + 'OUTPUT FORMAT (REQUIRED):\n\n'
+    + 'TITLE: [Under 60 chars, keyword first, compelling]\n\n'
+    + 'SLUG: [lowercase-hyphenated, max 7 words]\n\n'
+    + 'META: [Exactly 150-155 chars, keyword + benefit + CTA]\n\n'
+    + 'TAGS: [8 relevant tags, comma-separated]\n\n'
+    + 'CONTENT:\n'
+    + '[Write ' + wc + ' words minimum. Opening paragraph must include keyword in first 100 words.]\n\n'
+    + '## [H2 with keyword variation]\n'
+    + '[3 paragraphs minimum per H2 section]\n\n'
+    + '## [H2 - contextual section]\n'
+    + '[3 paragraphs]\n\n'
+    + '## [H2 - expert analysis or guide section]\n'
+    + '[3 paragraphs]\n\n'
+    + '## What to Expect Next\n'
+    + '[2 paragraphs - outlook and future context]\n\n'
+    + '## Frequently Asked Questions\n'
+    + 'USE THE PEOPLE ALSO ASK QUESTIONS from the system context below. Write 4-7 FAQs minimum.\n'
+    + '**Q:** [Question from PAA or common reader question]?\n'
+    + '**A:** [3-4 sentence direct answer]\n\n'
+    + '(repeat for each FAQ)\n\n'
+    + 'SEO RULES:\n'
+    + '- Keyword in title, first 100 words, 2+ H2 headings\n'
+    + '- 4-7 FAQ items using real PAA questions from the context\n'
+    + '- 2 internal links: [INTERNAL: related article topic]\n'
+    + affGuide;
+
+  try {
+    var r = await fetch(PROXY + '/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        model:       'claude-sonnet-4-20250514',
+        max_tokens:  8000,
+        articleType: selectedArtType,
+        serpData:    serpCache || null,
+        refContent:  refContent.length > 0 ? refContent : null
+      })
+    });
+    var d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Generate failed');
+
+    clearInterval(progInterval);
+    prog.style.width = '100%';
+    stxt.textContent = 'Done!';
+
+    var bsm = d.bsm || {};
+    state.qa = d.qa || null;
+    state.scores = null;
+    state.quickAnswer   = bsm.quickAnswer || '';
+    state.takeaways     = bsm.takeaways || [];
+    state.internalLinks = bsm.internalLinks || [];
+    state.title   = cleanField(bsm.title || '');
+    state.slug    = cleanSlug(bsm.slug || '');
+    state.meta    = cleanField(bsm.meta || '');
+    state.content = bsm.raw || '';
+    state.html    = bsm.html || '';
+    state.tags    = bsm.tags || [];
+    state.faq     = bsm.faq || [];
+
+    // Fallback slug from title
+    if (!state.slug || state.slug.length < 3) {
+      state.slug = cleanSlug(state.title);
+    }
+
+    state.genCount++;
+    state.cost += 0.085;
+    document.getElementById('st-gen').textContent = state.genCount;
+    document.getElementById('st-cost').textContent = '$' + state.cost.toFixed(2);
+    document.getElementById('st-remain').textContent = Math.max(0, 48 - state.genCount);
+    document.getElementById('sess-gen').textContent = state.genCount;
+    document.getElementById('sess-cost').textContent = '$' + state.cost.toFixed(2);
+
+    markStageDone(3);
+    populateEditPanel();
+    switchStage(4);
+    fetchDataforSEO();
+    notify('Article generated. Review and edit before publishing.', 'success');
+
+  } catch(e) {
+    clearInterval(progInterval);
+    stxt.textContent = 'Error: ' + e.message;
+    prog.style.width = '0';
+    notify('Generation failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    setTimeout(function() { status.style.display = 'none'; prog.style.width = '0'; }, 3000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 4 - EDIT
+// ═══════════════════════════════════════════════════════
+function populateEditPanel() {
+  document.getElementById('out-title-input').value = state.title;
+  document.getElementById('out-slug-input').value  = state.slug;
+  document.getElementById('out-meta-input').value  = state.meta;
+  document.getElementById('out-body-input').value  = state.content;
+  updateCharCount();
+  livePreview();
+  // Rebuild state.html immediately so publish works even without pressing Update
+  rebuildStyledHtml();
+  isDirty = false;
+  // Enable publish button - article just generated, safe to publish
+  var pubBtn = document.getElementById('btn-go-publish');
+  if (pubBtn) { pubBtn.disabled = false; pubBtn.style.opacity = '1'; }
+}
+
+function syncSlug(val) {
+  state.slug = val.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-');
+  document.getElementById('out-slug-input').value = state.slug;
+}
+
+function updateCharCount() {
+  var meta = document.getElementById('out-meta-input').value;
+  state.meta = meta;
+  var cnt = document.getElementById('meta-chars');
+  if (cnt) { cnt.textContent = meta.length; cnt.style.color = meta.length > 155 ? 'var(--red)' : 'var(--mg)'; }
+}
+
+// ── Dirty state tracking ──
+var isDirty = false;
+function markDirty() {
+  isDirty = true;
+  var btn = document.getElementById('btn-update');
+  if (btn) { btn.textContent = 'Update Article'; btn.style.background = 'var(--lime)'; btn.style.color = '#000'; }
+  var pubBtn = document.getElementById('btn-go-publish');
+  if (pubBtn) { pubBtn.disabled = true; pubBtn.style.opacity = '.4'; }
+}
+
+// ── Live markdown preview (lightweight - for the preview panel only) ──
+function livePreview() {
+  var content = state.content || '';
+  var preview = content
+    .replace(/## (.+)/g, '<h2 style="font-family:sans-serif;font-size:13px;font-weight:700;color:#e8e8e8;margin:14px 0 6px;text-transform:uppercase">$1</h2>')
+    .replace(/### (.+)/g, '<h3 style="font-size:12px;font-weight:700;color:#ccc;margin:10px 0 4px">$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff">$1</strong>')
+    .replace(/\n\n/g, '</p><p style="font-size:11px;line-height:1.7;color:#aaa;margin:0 0 10px">')
+    .replace(/\n/g, '<br>');
+  var el = document.getElementById('out-html-preview');
+  if (el) el.innerHTML = '<p style="font-size:11px;line-height:1.7;color:#aaa;margin:0 0 10px">' + preview + '</p>';
+}
+
+// ── Rebuild full BSM-styled HTML from edited markdown + FAQ ──
+// This is what actually gets sent to WordPress
+function rebuildStyledHtml() {
+  var content = state.content || '';
+
+  // ── STEP 1: Remove the ENTIRE FAQ section from the body FIRST ──
+  // The FAQ is rendered separately from state.faq. Strip every trace from the
+  // body so it cannot appear as plain paragraphs or be duplicated.
+  // Matches "## Frequently Asked Questions" or "## FAQ" through to end or next part.
+  content = content.replace(/##\s*(?:Frequently Asked Questions|FAQ|FAQs)[\s\S]*$/im, '');
+  // Also strip any stray **Q:** / **A:** pairs that may sit outside a heading
+  content = content.replace(/\*\*Q:\*\*[\s\S]*?(?=\n##\s|$)/gi, '');
+
+  // Parse markdown into sections
+  var sections = [];
+  var parts = content.split(/^## /m);
+  parts.forEach(function(part, i) {
+    if (!part.trim()) return;
+    var heading = '', text = part;
+    if (i > 0) {
+      var nl = part.indexOf('\n');
+      if (nl > -1) { heading = part.slice(0, nl).replace(/\*\*/g,'').trim(); text = part.slice(nl+1); }
+      else { heading = part.replace(/\*\*/g,'').trim(); text = ''; }
+    }
+    // Safety: skip any FAQ heading that survived
+    if (/frequently asked questions|^faqs?$/i.test(heading)) return;
+    // Convert inline markdown
+    text = text
+      .replace(/\[AFFILIATE:[^\]]+\]/gi, '')
+      .replace(/\[AMAZON:[^\]]+\]/gi, '')
+      .replace(/\[INTERNAL:\s*([^\]]+)\]/gi, '<a href="#" style="color:#E8FF00;text-decoration:underline;">$1</a>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#FFFFFF;font-weight:600;">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+    var paragraphs = text.split(/\n\n+/).map(function(p){ return p.trim(); })
+      .filter(function(p){ return p && !p.startsWith('#') && !/^\*\*[QA]:/.test(p) && p.length > 15; })
+      .map(function(p){ return p.replace(/\n/g,' '); });
+    if (paragraphs.length > 0 || heading) sections.push({ heading: heading, paragraphs: paragraphs });
+  });
+
+  // Build body HTML
+  var bodyHtml = '';
+  sections.forEach(function(s, i) {
+    if (i === 0) {
+      bodyHtml += s.paragraphs.map(function(p) {
+        return '<p style="font-family:\'Lora\',serif;font-size:17px;line-height:1.85;color:#C8C8C8;margin-bottom:22px;">' + p + '</p>';
+      }).join('\n');
+    } else {
+      if (s.heading) {
+        bodyHtml += '\n<h2 style="font-family:\'Barlow Condensed\',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;color:#FFFFFF;line-height:1;margin:40px 0 16px;padding-left:14px;border-left:3px solid #E8FF00;">' + s.heading + '</h2>\n';
+      }
+      bodyHtml += s.paragraphs.map(function(p) {
+        return '<p style="font-family:\'Lora\',serif;font-size:17px;line-height:1.85;color:#C8C8C8;margin-bottom:22px;">' + p + '</p>';
+      }).join('\n');
+    }
+  });
+
+  // Rebuild FAQ block from state.faq
+  var faqHtml = '';
+  if (state.faq && state.faq.length > 0) {
+    var faqItems = state.faq.slice(0, 7);
+    var schemaData = {
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      'mainEntity': faqItems.map(function(item) {
+        return { '@type':'Question', 'name':(item.q||'').replace(/\*\*/g,'').trim(),
+          'acceptedAnswer':{'@type':'Answer','text':(item.a||'').replace(/\*\*/g,'').trim()} };
+      })
+    };
+    var speakableData = {
+      '@context':'https://schema.org','@type':'WebPage',
+      'speakable':{'@type':'SpeakableSpecification','cssSelector':['.bsm-faq']}
+    };
+    var itemsHtml = faqItems.map(function(item) {
+      var q = (item.q||'').replace(/\*\*/g,'').trim();
+      var a = (item.a||'').replace(/\*\*/g,'').trim();
+      return '<div class="bsm-faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">'
+        + '<div class="bsm-faq-q" itemprop="name">' + q + '</div>'
+        + '<div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">'
+        + '<div class="bsm-faq-a" itemprop="text">' + a + '</div>'
+        + '</div></div>';
+    }).join('');
+    faqHtml = '<script type="application/ld+json">' + JSON.stringify(schemaData) + '<\/script>\n'
+      + '<script type="application/ld+json">' + JSON.stringify(speakableData) + '<\/script>\n'
+      + '<style>.bsm-faq{border:1px solid #2E2E2E;margin:40px 0;max-width:720px;overflow:hidden}'
+      + '.bsm-faq-title{font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;color:#fff;padding:14px 20px;background:#1A1A1A;border-bottom:2px solid #E8FF00}'
+      + '.bsm-faq-item{border-bottom:1px solid #2E2E2E;padding:16px 20px;background:#111}'
+      + '.bsm-faq-item:last-child{border-bottom:none}'
+      + '.bsm-faq-q{font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;color:#E8FF00;margin-bottom:8px}'
+      + '.bsm-faq-a{font-family:\'Lora\',serif;font-size:15px;color:#C8C8C8;line-height:1.75}</style>\n'
+      + '<div class="bsm-faq" itemscope itemtype="https://schema.org/FAQPage">'
+      + '<div class="bsm-faq-title">Frequently Asked Questions</div>'
+      + itemsHtml + '</div>';
+  }
+
+  // Article schema
+  var articleSchema = JSON.stringify({
+    '@context':'https://schema.org','@type':'BlogPosting',
+    'headline': cleanField(state.title),
+    'description': cleanField(state.meta),
+    'author':{'@type':'Organization','name':'BSM Editorial Staff','url':'https://bestsportsmag.com'},
+    'publisher':{'@type':'Organization','name':'BestSportsMag','url':'https://bestsportsmag.com'},
+    'datePublished': new Date().toISOString(),
+    'keywords': (state.tags||[]).join(', ')
+  });
+
+  // Assemble final HTML
+  state.html = '<!-- BSM v5.1 -->\n'
+    + '<script type="application/ld+json">' + articleSchema + '<\/script>\n'
+    + '<div class="bsm-generated-content">\n'
+    + bodyHtml + '\n'
+    + faqHtml + '\n'
+    + '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:#444;padding:8px 0;border-top:1px solid #1a1a1a;margin-top:20px">'
+    + 'This article was researched using live sources. Affiliate links are marked. &copy; BestSportsMag ' + new Date().getFullYear()
+    + '</div>\n</div>';
+
+  return state.html;
+}
+
+// ── UPDATE BUTTON handler ──
+function updateArticle() {
+  // Commit all fields from the UI into state
+  state.title   = cleanField(document.getElementById('out-title-input').value || '');
+  state.slug    = cleanSlug(document.getElementById('out-slug-input').value || '');
+  state.meta    = (document.getElementById('out-meta-input').value || '').trim();
+  state.content = document.getElementById('out-body-input').value || '';
+
+  // Rebuild full BSM-styled HTML including FAQ and schemas
+  rebuildStyledHtml();
+
+  // Update the HTML preview
+  livePreview();
+
+  // Mark as clean - edits are committed
+  isDirty = false;
+
+  // Visual confirmation
+  var btn = document.getElementById('btn-update');
+  if (btn) {
+    btn.textContent = 'UPDATED';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#000';
+    setTimeout(function() {
+      btn.textContent = 'Update Article';
+      btn.style.background = 'var(--lime)';
+    }, 2500);
+  }
+
+  // Enable publish button
+  var pubBtn = document.getElementById('btn-go-publish');
+  if (pubBtn) { pubBtn.disabled = false; pubBtn.style.opacity = '1'; }
+
+  // Update publish preview
+  updatePublishPreview();
+  notify('Article updated and ready to publish', 'success');
+}
+
+function copyHtml() {
+  navigator.clipboard.writeText(state.html || '').then(function() { notify('HTML copied to clipboard', 'success'); });
+}
+
+function copyAll() {
+  var all = 'TITLE: ' + state.title + '\nSLUG: ' + state.slug + '\nMETA: ' + state.meta
+    + '\n\nTAGS: ' + state.tags.join(', ') + '\n\nCONTENT:\n' + state.content;
+  navigator.clipboard.writeText(all).then(function() { notify('All fields copied', 'success'); });
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE 5 - PUBLISH
+// ═══════════════════════════════════════════════════════
+function updatePublishPreview() {
+  var words = state.content ? state.content.split(/\s+/).length : 0;
+  document.getElementById('pub-title-preview').textContent = cleanField(state.title || '-');
+  document.getElementById('pub-slug-preview').textContent  = cleanSlug(state.slug || state.title || '-');
+  document.getElementById('pub-words').textContent  = words + ' words';
+  document.getElementById('pub-faqs').textContent   = (state.faq || []).length + ' FAQ items';
+  document.getElementById('pub-status').textContent = isDirty ? 'Unsaved edits - press Update first' : 'Ready to publish';
+  document.getElementById('pub-status').style.color = isDirty ? 'var(--orange)' : 'var(--lime)';
+}
+
+async function testWP() {
+  var url  = document.getElementById('wp-url').value.trim().replace(/\/$/,'');
+  var user = document.getElementById('wp-user').value.trim();
+  var pass = document.getElementById('wp-pass').value.trim();
+  var res  = document.getElementById('wp-test-result');
+  res.innerHTML = '<div class="wp-info">Testing...</div>';
+  try {
+    var r = await fetch(url + '/wp-json/wp/v2/users/me', {
+      headers: { 'Authorization': 'Basic ' + btoa(user + ':' + pass) }
+    });
+    if (r.ok) {
+      var d = await r.json();
+      res.innerHTML = '<div class="wp-success">Connected as: ' + escHtml(d.name || user) + '</div>';
+    } else {
+      res.innerHTML = '<div class="wp-error">Auth failed (' + r.status + ') - check username and password</div>';
+    }
+  } catch(e) {
+    res.innerHTML = '<div class="wp-error">Cannot reach WordPress: ' + e.message + '</div>';
+  }
+}
+
+async function publishWP() {
+  // GATE: all 3 scores must clear threshold
+  // Scores are guidance only - no publish gate.
+  // If user edited but did not press Update, force rebuild now
+  if (isDirty) { updateArticle(); }
+  if (!state.title || !state.html) { notify('No article to publish - generate one first', 'error'); return; }
+  var url  = document.getElementById('wp-url').value.trim().replace(/\/$/,'');
+  var user = document.getElementById('wp-user').value.trim();
+  var pass = document.getElementById('wp-pass').value.trim();
+  var cat  = parseInt(document.getElementById('wp-cat').value) || null;
+  var res  = document.getElementById('pub-result');
+
+  if (!url || !user || !pass) { notify('Fill in WordPress credentials first', 'error'); return; }
+
+  var btn = document.getElementById('btn-publish');
+  btn.disabled = true;
+  btn.textContent = 'Publishing...';
+  res.innerHTML = '<div class="wp-info">Sending to WordPress...</div>';
+
+  var title = cleanField(state.title);
+  var slug  = cleanSlug(state.slug || state.title);
+
+  try {
+    var body = {
+      title:          title,
+      content:        state.html,
+      slug:           slug,
+      excerpt:        cleanField(state.meta),
+      status:         'publish',
+      comment_status: 'open',
+      ping_status:    'closed'
+    };
+    if (cat) body.categories = [cat];
+    if (state.tags && state.tags.length) {
+      // Tags as comma-separated for WP
+      body.tags_input = state.tags.join(',');
+    }
+
+    var r = await fetch(url + '/wp-json/wp/v2/posts', {
+      method: 'POST',
+      headers: { 'Authorization': 'Basic ' + btoa(user + ':' + pass), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var d = await r.json();
+
+    if (r.ok) {
+      state.pubCount++;
+      document.getElementById('st-pub').textContent  = state.pubCount;
+      document.getElementById('sess-pub').textContent = state.pubCount;
+      markStageDone(4);
+      markStageDone(5);
+      res.innerHTML = '<div class="wp-success">Published! <a href="' + (d.link || '#') + '" target="_blank" style="color:var(--lime)">'
+        + escHtml(title) + ' &rarr;</a></div>';
+      notify('Published: ' + title.slice(0, 60), 'success');
+      document.getElementById('pub-status').textContent = 'Published';
+      document.getElementById('pub-status').style.color = 'var(--green)';
+    } else {
+      var errMsg = d.message || d.code || r.status;
+      res.innerHTML = '<div class="wp-error">Failed: ' + escHtml(errMsg) + '</div>';
+      notify('Publish failed: ' + errMsg, 'error');
+    }
+  } catch(e) {
+    res.innerHTML = '<div class="wp-error">Error: ' + e.message + '</div>';
+    notify('Publish error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Publish Live Now';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function cleanField(str) {
+  return (str || '').replace(/\*\*/g,'').replace(/^[\[#\s]+|[\]\s]+$/g,'').trim();
+}
+
+function cleanSlug(str) {
+  return (str || '').toLowerCase()
+    .replace(/\*\*/g,'').replace(/^[\[#\s\/]+|[\]\s\/]+$/g,'')
+    .replace(/[^a-z0-9\s-]/g,'').trim()
+    .replace(/\s+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')
+    .slice(0, 80);
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escJs(str) {
+  return (str || '').replace(/'/g,"\\'").replace(/"/g,'\\"');
+}
+
+function notify(msg, type) {
+  var n = document.getElementById('notif');
+  n.textContent = msg;
+  n.className = 'notif show' + (type ? ' ' + type : '');
+  clearTimeout(n._t);
+  n._t = setTimeout(function() { n.className = 'notif'; }, 3500);
+}
+
+
+// ═══════════════════════════════════════════════════════
+// QA / QC CHECK - validates the generated article
+// Tests: source ingestion, fact traceability, PAA coverage,
+//        forbidden phrases, structure, word count
+// ═══════════════════════════════════════════════════════
+function runQaCheck() {
+  var panel = document.getElementById('qa-panel');
+  var body  = document.getElementById('qa-body');
+  panel.style.display = 'block';
+
+  var qa = state.qa || {};
+  var content = state.content || '';
+  var wordCount = content ? content.split(/\s+/).filter(Boolean).length : 0;
+  var targetWords = parseInt(document.getElementById('word-count').value) || 1600;
+
+  var rows = [];
+
+  // ── TEST 1: Source ingestion (did the server receive the sources?) ──
+  var serpOk = (qa.serpResultsUsed || 0) > 0;
+  var paaOk  = (qa.paaUsed || 0) > 0;
+  var refGiven = (qa.refUrls || []).length > 0;
+  var refOk  = (qa.refSourcesUsed || 0) > 0;
+
+  rows.push(qaRow('SERP results ingested', serpOk,
+    serpOk ? (qa.serpResultsUsed + ' results from ' + qa.serpSource) : 'No SERP data reached the server'));
+  rows.push(qaRow('PAA questions ingested', paaOk,
+    paaOk ? (qa.paaUsed + ' questions used') : 'No PAA questions ingested'));
+
+  if (refGiven) {
+    rows.push(qaRow('Reference URLs fetched', refOk,
+      refOk ? (qa.refSourcesUsed + ' of ' + qa.refUrls.length + ' URLs read successfully')
+            : 'URLs given but NONE fetched - check the URLs'));
+    // Per-URL detail
+    (qa.refUrls || []).forEach(function(r) {
+      rows.push(qaSubRow(r.url, r.ok, r.ok ? (r.chars + ' chars read') : 'fetch failed / empty'));
+    });
+  } else {
+    rows.push(qaRow('Reference URLs', true, 'None provided (optional) - SERP + PAA used'));
+  }
+
+  // ── TEST 2: Fact traceability (PAA coverage in article) ──
+  var paaQs = qa.paaQuestions || [];
+  var coveredCount = 0;
+  paaQs.forEach(function(q) {
+    // Extract key noun words from the PAA question and check presence in body
+    var keywords = (q || '').toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/)
+      .filter(function(w){ return w.length > 4; });
+    var hits = keywords.filter(function(w){ return content.toLowerCase().indexOf(w) > -1; });
+    if (keywords.length > 0 && hits.length / keywords.length >= 0.5) coveredCount++;
+  });
+  var paaCoverage = paaQs.length > 0 ? Math.round((coveredCount / paaQs.length) * 100) : 0;
+  if (paaQs.length > 0) {
+    rows.push(qaRow('PAA topics covered in article', paaCoverage >= 60,
+      coveredCount + ' of ' + paaQs.length + ' PAA topics appear in the body (' + paaCoverage + '%)'));
+  }
+
+  // ── TEST 3: Forbidden phrases scan ──
+  var forbidden = [
+    'in the world of sports', 'it goes without saying', 'at the end of the day',
+    'this is a testament to', 'in conclusion', 'it is worth noting that',
+    'sports have always been', 'throughout history'
+  ];
+  var found = forbidden.filter(function(p){ return content.toLowerCase().indexOf(p) > -1; });
+  rows.push(qaRow('No forbidden generic phrases', found.length === 0,
+    found.length === 0 ? 'Clean - no banned phrases' : 'Found: ' + found.join(', ')));
+
+  // ── TEST 4: Structure ──
+  var h2Count = (content.match(/^##\s/gm) || []).length;
+  rows.push(qaRow('H2 sections (min 3)', h2Count >= 3, h2Count + ' H2 headings'));
+
+  var faqCount = (state.faq || []).length;
+  rows.push(qaRow('FAQ items (4-7)', faqCount >= 4 && faqCount <= 7, faqCount + ' FAQ items'));
+
+  // ── TEST 5: Word count ──
+  var wcOk = wordCount >= targetWords * 0.85;
+  rows.push(qaRow('Word count near target', wcOk,
+    wordCount + ' words (target ' + targetWords + ')'));
+
+  // ── TEST 6: Title / meta / slug present and clean ──
+  rows.push(qaRow('SEO title set', !!state.title && state.title.length > 10,
+    state.title ? (state.title.length + ' chars') : 'missing'));
+  rows.push(qaRow('Meta description length', state.meta.length >= 120 && state.meta.length <= 160,
+    state.meta.length + ' chars (ideal 150-155)'));
+  rows.push(qaRow('Slug clean', /^[a-z0-9-]+$/.test(state.slug), state.slug || 'missing'));
+
+  // ── Score ──
+  var passCount = rows.filter(function(r){ return r.pass; }).length;
+  var totalCount = rows.filter(function(r){ return !r.sub; }).length;
+  var scorePct = Math.round((rows.filter(function(r){ return r.pass && !r.sub; }).length / totalCount) * 100);
+
+  var scoreColor = scorePct >= 80 ? 'var(--green)' : scorePct >= 60 ? 'var(--orange)' : 'var(--red)';
+
+  var html = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--dg)">'
+    + '<div style="font-family:var(--f-d);font-size:34px;font-weight:900;color:' + scoreColor + ';line-height:1">' + scorePct + '%</div>'
+    + '<div><div style="font-family:var(--f-d);font-size:16px;font-weight:700;color:var(--white);text-transform:uppercase">QA Score</div>'
+    + '<div style="font-family:var(--f-m);font-size:10px;color:var(--mg)">' + rows.filter(function(r){return r.pass&&!r.sub;}).length + ' of ' + totalCount + ' checks passed</div></div>'
+    + '</div>';
+
+  html += rows.map(function(r) {
+    if (r.sub) {
+      return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0 4px 20px;font-family:var(--f-m);font-size:9px;color:var(--mg)">'
+        + '<span style="color:' + (r.pass ? 'var(--green)' : 'var(--red)') + '">' + (r.pass ? 'ok' : 'x') + '</span>'
+        + '<span style="color:var(--blue);word-break:break-all">' + escHtml(r.label.slice(0,50)) + '</span>'
+        + '<span style="margin-left:auto;color:var(--mg)">' + escHtml(r.detail) + '</span></div>';
+    }
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03)">'
+      + '<span style="font-family:var(--f-m);font-size:11px;font-weight:700;color:' + (r.pass ? 'var(--green)' : 'var(--red)') + ';width:16px">' + (r.pass ? 'OK' : 'X') + '</span>'
+      + '<span style="font-family:var(--f-d);font-size:14px;font-weight:600;color:var(--white);flex:1">' + escHtml(r.label) + '</span>'
+      + '<span style="font-family:var(--f-m);font-size:10px;color:var(--mg);text-align:right;max-width:50%">' + escHtml(r.detail) + '</span>'
+      + '</div>';
+  }).join('');
+
+  if (!state.qa) {
+    html += '<div style="margin-top:10px;font-family:var(--f-m);font-size:10px;color:var(--orange)">Note: source ingestion data unavailable - regenerate the article to capture full QA telemetry.</div>';
+  }
+
+  body.innerHTML = html;
+}
+
+function qaRow(label, pass, detail) { return { label:label, pass:!!pass, detail:detail||'', sub:false }; }
+function qaSubRow(label, pass, detail) { return { label:label, pass:!!pass, detail:detail||'', sub:true }; }
+
+
+// ═══════════════════════════════════════════════════════
+// STAGE 4 - OPTIMIZE (SEO / GEO / AI scoring + 85 gate)
+// ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// v6.1.0 - BROWSER-SIDE LIVE SCORING ENGINE
+// Mirrors the server /score logic, runs instantly on keystroke
+// ═══════════════════════════════════════════════════════
+
+// ── DataforSEO - automatic real keyword + competitor data ──
+async function fetchDataforSEO() {
+  if (!state.topic) return;
+  try {
+    var r = await fetch(PROXY + '/dfseo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyword: state.topic })
+    });
+    var d = await r.json();
+    state.dfseo = d;
+    renderDfseo(d);
+    // Re-run optimize so the SEO score can factor in real difficulty
+    if (document.getElementById('panel-4') && document.getElementById('panel-4').classList.contains('active')) {
+      runOptimize();
+    }
+  } catch(e) {
+    state.dfseo = { enabled: false, error: e.message };
+  }
+}
+
+function renderDfseo(d) {
+  var el = document.getElementById('dfseo-panel');
+  if (!el) return;
+  if (!d || d.enabled === false) {
+    el.style.display = 'block';
+    el.innerHTML = '<div style="font-family:var(--f-m);font-size:10px;color:var(--mg)">DataforSEO not configured. Add DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD to Render env vars to enable real keyword difficulty and competitor data.</div>';
+    return;
+  }
+  if (d.error) {
+    el.style.display = 'block';
+    el.innerHTML = '<div style="font-family:var(--f-m);font-size:10px;color:var(--red)">DataforSEO error: ' + escHtml(d.error) + '</div>';
+    return;
+  }
+  el.style.display = 'block';
+  var diffColor = d.difficulty == null ? 'var(--mg)' : (d.difficulty < 30 ? 'var(--green)' : d.difficulty < 60 ? 'var(--orange)' : 'var(--red)');
+  var html = '<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
+    + '<div><div style="font-family:var(--f-m);font-size:9px;color:var(--mg);text-transform:uppercase;letter-spacing:.1em">Keyword Difficulty</div>'
+    + '<div style="font-family:var(--f-d);font-size:28px;font-weight:900;color:' + diffColor + ';line-height:1">' + (d.difficulty != null ? d.difficulty : '--') + '</div></div>'
+    + '<div><div style="font-family:var(--f-m);font-size:9px;color:var(--mg);text-transform:uppercase;letter-spacing:.1em">Search Volume</div>'
+    + '<div style="font-family:var(--f-d);font-size:28px;font-weight:900;color:var(--blue);line-height:1">' + (d.volume != null ? d.volume.toLocaleString() : '--') + '</div></div>'
+    + '<div><div style="font-family:var(--f-m);font-size:9px;color:var(--mg);text-transform:uppercase;letter-spacing:.1em">Competitors Found</div>'
+    + '<div style="font-family:var(--f-d);font-size:28px;font-weight:900;color:var(--white);line-height:1">' + (d.competitorCount || 0) + '</div></div>'
+    + '</div>';
+  if (d.competitors && d.competitors.length) {
+    html += '<div style="font-family:var(--f-m);font-size:9px;color:var(--lime);text-transform:uppercase;letter-spacing:.12em;margin:8px 0 6px">Who Ranks Now</div>';
+    html += d.competitors.slice(0,5).map(function(c) {
+      return '<div style="font-family:var(--f-m);font-size:10px;color:var(--lg);padding:3px 0">' + c.position + '. <span style="color:var(--blue)">' + escHtml(c.domain) + '</span> &mdash; ' + escHtml((c.title||'').slice(0,70)) + '</div>';
+    }).join('');
+  }
+  el.innerHTML = html;
+}
+
+function computeScores() {
+  var title   = (state.title || '').trim();
+  var meta    = (state.meta || '').trim();
+  var slug    = (state.slug || '').trim();
+  var content = (state.content || '');
+  var html    = (state.html || '');
+  var faq     = state.faq || [];
+  var keyword = (state.topic || '').toLowerCase();
+  var lc      = content.toLowerCase();
+  var wordCount = content ? content.split(/\s+/).filter(Boolean).length : 0;
+  var h2Count = (content.match(/^##\s/gm) || []).length;
+
+  function chk(label, pass, fix, kind) {
+    return { label: label, pass: !!pass, fix: pass ? '' : fix, kind: kind || 'content' };
+  }
+
+  // ── SEO (9) ──
+  var seo = [
+    chk('Keyword in title', keyword && title.toLowerCase().indexOf(keyword.split(' ')[0]) > -1,
+      'Add the primary keyword near the start of the SEO title.', 'manual'),
+    chk('Title length 30-60 chars', title.length >= 30 && title.length <= 60,
+      'Adjust title to 30-60 characters.', 'manual'),
+    chk('Meta description 120-160 chars', meta.length >= 120 && meta.length <= 160,
+      'Rewrite meta to 150-155 characters.', 'manual'),
+    chk('Clean slug', /^[a-z0-9-]+$/.test(slug) && slug.length > 3,
+      'Slug must be lowercase-hyphenated.', 'manual'),
+    chk('At least 3 H2 sections', h2Count >= 3,
+      'Add more H2 sections (4-6 keyword-rich headings).', 'content'),
+    chk('Word count 1200+', wordCount >= 1200,
+      'Expand article to at least 1,200 words.', 'content'),
+    chk('Has data table', html.indexOf('<table') > -1 || content.indexOf('|') > -1,
+      'Add a comparison or data table for snippets.', 'structural'),
+    chk('Internal links present', (state.internalLinks || []).length > 0 || content.indexOf('[INTERNAL') > -1,
+      'Add 2-4 internal links to related BSM articles.', 'structural'),
+    chk('Schema markup present', html.indexOf('application/ld+json') > -1,
+      'Schema is auto-added on Update - press Update Article.', 'structural')
+  ];
+
+  // ── GEO (6) ──
+  var geo = [
+    chk('Quick answer box', !!state.quickAnswer || html.indexOf('bsm-quick-answer') > -1 || html.indexOf('bsm-verdict') > -1,
+      'Add a Quick Answer box (1-2 sentence direct answer).', 'structural'),
+    chk('Direct-answer opening', content.slice(0, 300).split('.').length >= 2,
+      'Open with a direct factual sentence.', 'content'),
+    chk('Specific numbers/stats', (content.match(/\d/g) || []).length >= 15,
+      'Add more numbers, dates, and statistics.', 'content'),
+    chk('Named entities', (content.match(/[A-Z][a-z]+\s[A-Z][a-z]+/g) || []).length >= 8,
+      'Reference more named people, teams, places.', 'content'),
+    chk('FAQ present (4+)', faq.length >= 4,
+      'Add at least 4 FAQ items.', 'content'),
+    chk('Definitional clarity', /\bis\b|\bare\b|\bmeans\b|\brefers\b/.test(lc.slice(0, 600)),
+      'Include a clear "X is Y" statement near the top.', 'content')
+  ];
+
+  // ── AI/LLM (6) ──
+  var ai = [
+    chk('Extractable claims', (content.match(/\d+\s*(goals|wins|points|percent|%|million|billion|years|matches|teams)/gi) || []).length >= 3,
+      'Add self-contained factual claims with numbers.', 'content'),
+    chk('Source attribution', /according to|reported|confirmed|announced|per /i.test(content),
+      'Attribute key facts (according to, reported by).', 'content'),
+    chk('FAQ schema-ready', faq.length >= 4,
+      'Ensure 4-7 FAQ items in Q/A format.', 'content'),
+    chk('Key takeaways block', (state.takeaways || []).length > 0 || html.indexOf('bsm-takeaways') > -1,
+      'Add a Key Takeaways list.', 'structural'),
+    chk('Scannable structure', h2Count >= 3 && faq.length >= 4,
+      'Improve structure: clear H2s + FAQ.', 'content'),
+    chk('Entity-rich content', (content.match(/[A-Z][a-z]+\s[A-Z][a-z]+/g) || []).length >= 8,
+      'Name more specific entities.', 'content')
+  ];
+
+  // ── FACT-GROUNDING (hallucination circuit-breaker) ──
+  // What % of the article's factual claims trace to reference URLs or SERP context?
+  var grounding = computeGrounding(content, faq);
+
+  function scoreOf(arr) {
+    return Math.round((arr.filter(function(c){ return c.pass; }).length / arr.length) * 100);
+  }
+
+  return {
+    seo: { score: scoreOf(seo), checks: seo },
+    geo: { score: scoreOf(geo), checks: geo },
+    ai:  { score: scoreOf(ai),  checks: ai },
+    grounding: grounding,
+    wordCount: wordCount, h2Count: h2Count, faqCount: faq.length
+  };
+}
+
+// ── Fact-grounding engine ──
+// Extracts factual claims (sentences with numbers, names, dates, attribution)
+// then checks what fraction appear in the reference + SERP source text.
+function computeGrounding(content, faq) {
+  // Build the combined source corpus from reference URLs + SERP
+  var corpus = '';
+  (state.refContent || []).forEach(function(r) { if (r.text) corpus += ' ' + r.text; });
+  if (state.qa && state.qa.serpSource) {
+    // SERP descriptions if available via serpCache
+  }
+  if (window.serpCache) {
+    (serpCache.results || []).forEach(function(r) { corpus += ' ' + (r.title||'') + ' ' + (r.description||''); });
+    (serpCache.paa || []).forEach(function(p) { corpus += ' ' + (p.q||'') + ' ' + (p.a||''); });
+  }
+  corpus = corpus.toLowerCase();
+
+  var hasSources = corpus.trim().length > 100;
+
+  // Extract factual sentences - those containing a number, a proper-noun pair, or attribution
+  var sentences = content.replace(/\n/g,' ').split(/(?<=[.!?])\s+/).filter(function(s){ return s.length > 25; });
+  var factual = sentences.filter(function(s) {
+    return /\d/.test(s) || /[A-Z][a-z]+\s[A-Z][a-z]+/.test(s);
+  });
+
+  if (!hasSources) {
+    // No sources provided - cannot verify. Grounding is unknown, treat as 0 with a clear flag.
+    return {
+      score: 0,
+      hasSources: false,
+      totalClaims: factual.length,
+      groundedClaims: 0,
+      unsourced: [],
+      note: 'No reference URLs or SERP data available to verify claims against. Add reference URLs to enable grounding.'
+    };
+  }
+
+  // For each factual sentence, check if its key tokens appear in the corpus
+  var grounded = 0;
+  var unsourced = [];
+  factual.forEach(function(s) {
+    // Extract distinctive tokens: capitalised words + numbers
+    var tokens = [];
+    var caps = s.match(/[A-Z][a-z]{3,}/g) || [];
+    var nums = s.match(/\b\d{2,}\b/g) || [];
+    tokens = caps.concat(nums).map(function(t){ return t.toLowerCase(); });
+    tokens = tokens.filter(function(t, i){ return tokens.indexOf(t) === i; }); // unique
+    if (tokens.length === 0) { grounded++; return; } // no checkable tokens, neutral
+    var hits = tokens.filter(function(t){ return corpus.indexOf(t) > -1; });
+    var ratio = hits.length / tokens.length;
+    if (ratio >= 0.4) grounded++;
+    else if (unsourced.length < 8) unsourced.push(s.trim().slice(0, 120));
+  });
+
+  var score = factual.length > 0 ? Math.round((grounded / factual.length) * 100) : 100;
+
+  return {
+    score: score,
+    hasSources: true,
+    totalClaims: factual.length,
+    groundedClaims: grounded,
+    unsourced: unsourced,
+    note: ''
+  };
+}
+
+// Runs scoring locally (no API), updates state + UI
+function runOptimize() {
+  if (!state.content) { return; }
+  var d = computeScores();
+  state.scores = d;
+  renderScores(d);
+  renderLiveStrip(d);
+}
+
+// Live recompute - called on every edit keystroke (debounced)
+var _liveTimer = null;
+function liveScore() {
+  clearTimeout(_liveTimer);
+  _liveTimer = setTimeout(function() {
+    var d = computeScores();
+    state.scores = d;
+    renderLiveStrip(d);
+    // If the optimize panel is visible, update it too
+    if (document.getElementById('panel-4') && document.getElementById('panel-4').classList.contains('active')) {
+      renderScores(d);
+    }
+  }, 400);
+}
+
+function renderScores(d) {
+  var pass = PUBLISH_THRESHOLD;
+  var gpass = GROUNDING_THRESHOLD;
+  setGauge('seo', d.seo.score, pass);
+  setGauge('geo', d.geo.score, pass);
+  setGauge('ai',  d.ai.score,  pass);
+  if (d.grounding) setGauge('grounding', d.grounding.score, gpass);
+
+  var allPass = d.seo.score >= pass && d.geo.score >= pass && d.ai.score >= pass
+    && d.grounding && d.grounding.score >= gpass;
+
+  var verdict = document.getElementById('opt-verdict');
+  if (verdict) {
+    verdict.style.display = 'block';
+    if (allPass) {
+      verdict.style.background = '#001a00'; verdict.style.border = '1px solid #004400'; verdict.style.color = 'var(--green)';
+      verdict.textContent = 'All targets met. You can publish.';
+    } else {
+      verdict.style.background = '#1a0000'; verdict.style.border = '1px solid #440000'; verdict.style.color = 'var(--red)';
+      var failed = [];
+      if (d.seo.score < pass) failed.push('SEO ' + d.seo.score);
+      if (d.geo.score < pass) failed.push('GEO ' + d.geo.score);
+      if (d.ai.score < pass)  failed.push('AI ' + d.ai.score);
+      if (d.grounding && d.grounding.score < gpass) failed.push('Grounding ' + d.grounding.score + '/' + gpass);
+      verdict.textContent = 'Suggestions to improve: ' + failed.join(', ') + '. You can still publish anytime.';
+    }
+  }
+
+  var fixesEl = document.getElementById('opt-fixes');
+  if (fixesEl) {
+    var groups = [
+      { name:'SEO', color:'var(--lime)', data:d.seo },
+      { name:'GEO', color:'var(--blue)', data:d.geo },
+      { name:'AI / LLM', color:'var(--orange)', data:d.ai }
+    ];
+    var html = '';
+    groups.forEach(function(g) {
+      var failed = g.data.checks.filter(function(c){ return !c.pass; });
+      if (failed.length === 0) return;
+      html += '<div class="opt-fix-group"><div class="opt-fix-group-title" style="color:' + g.color + '">' + g.name + ' &mdash; ' + failed.length + ' to fix</div>';
+      failed.forEach(function(c) {
+        var btnLabel = c.kind === 'structural' ? 'Fix' : (c.kind === 'manual' ? 'Edit' : 'AI Fix');
+        var btnColor = c.kind === 'structural' ? 'var(--green)' : (c.kind === 'manual' ? 'var(--mg)' : 'var(--blue)');
+        html += '<div class="opt-fix-item">'
+          + '<span class="opt-fix-x">X</span>'
+          + '<div class="opt-fix-text"><div class="opt-fix-label">' + escHtml(c.label) + '</div>'
+          + '<div class="opt-fix-suggest">' + escHtml(c.fix) + '</div></div>'
+          + '<button class="opt-fix-btn" style="background:' + btnColor + '" onclick="applyFix(\'' + escJs(c.label) + '\',\'' + c.kind + '\')">' + btnLabel + '</button>'
+          + '</div>';
+      });
+      html += '</div>';
+    });
+    // Grounding section
+    if (d.grounding) {
+      var g = d.grounding;
+      if (!g.hasSources) {
+        html += '<div class="opt-fix-group"><div class="opt-fix-group-title" style="color:var(--red)">Grounding &mdash; no sources</div>'
+          + '<div class="opt-fix-item"><span class="opt-fix-x">!</span>'
+          + '<div class="opt-fix-text"><div class="opt-fix-label">No reference sources to verify facts</div>'
+          + '<div class="opt-fix-suggest">' + escHtml(g.note) + '</div></div>'
+          + '<button class="opt-fix-btn" style="background:var(--mg)" onclick="switchStage(3)">Add URLs</button></div></div>';
+      } else if (g.score < GROUNDING_THRESHOLD) {
+        html += '<div class="opt-fix-group"><div class="opt-fix-group-title" style="color:var(--red)">Grounding ' + g.score + '/' + GROUNDING_THRESHOLD + ' &mdash; ' + g.unsourced.length + ' unsourced claims</div>';
+        html += '<div style="font-family:var(--f-m);font-size:10px;color:var(--mg);padding:4px 0 8px">' + g.groundedClaims + ' of ' + g.totalClaims + ' factual claims trace to your sources. These do not:</div>';
+        g.unsourced.forEach(function(claim) {
+          html += '<div class="opt-fix-item"><span class="opt-fix-x">?</span>'
+            + '<div class="opt-fix-text"><div class="opt-fix-suggest" style="color:var(--orange)">' + escHtml(claim) + '...</div></div></div>';
+        });
+        html += '<div style="font-family:var(--f-m);font-size:10px;color:var(--mg);padding:8px 0">Add a reference URL covering these, or remove/rephrase the unverified claims.</div>';
+        html += '</div>';
+      }
+    }
+
+    if (!html) html = '<div style="font-family:var(--f-m);font-size:11px;color:var(--green);padding:10px 0">All checks passed. Nothing to fix.</div>';
+    fixesEl.innerHTML = html;
+  }
+
+  var contBtn = document.getElementById('btn-opt-continue');
+  if (contBtn) { contBtn.disabled = false; contBtn.style.opacity = '1'; }
+  markStageDone(4);
+  gatePublish(true);
+}
+
+// Compact live strip shown on the Edit tab
+function renderLiveStrip(d) {
+  var strip = document.getElementById('live-score-strip');
+  if (!strip) return;
+  var pass = PUBLISH_THRESHOLD;
+  function pill(label, score) {
+    var col = score >= pass ? 'var(--green)' : (score >= pass - 15 ? 'var(--orange)' : 'var(--red)');
+    return '<div style="display:flex;align-items:center;gap:6px">'
+      + '<span style="font-family:var(--f-m);font-size:9px;color:var(--mg);text-transform:uppercase;letter-spacing:.1em">' + label + '</span>'
+      + '<span style="font-family:var(--f-d);font-size:20px;font-weight:900;color:' + col + ';line-height:1">' + score + '</span>'
+      + '</div>';
+  }
+  function gpill(label, score, thresh) {
+    var col = score >= thresh ? 'var(--green)' : (score >= thresh - 15 ? 'var(--orange)' : 'var(--red)');
+    return '<div style="display:flex;align-items:center;gap:6px">'
+      + '<span style="font-family:var(--f-m);font-size:9px;color:var(--mg);text-transform:uppercase;letter-spacing:.1em">' + label + '</span>'
+      + '<span style="font-family:var(--f-d);font-size:20px;font-weight:900;color:' + col + ';line-height:1">' + score + '</span></div>';
+  }
+  var gScore = d.grounding ? d.grounding.score : 0;
+  var allPass = d.seo.score >= pass && d.geo.score >= pass && d.ai.score >= pass && gScore >= GROUNDING_THRESHOLD;
+  strip.innerHTML = pill('SEO', d.seo.score) + pill('GEO', d.geo.score) + pill('AI', d.ai.score)
+    + gpill('GND', gScore, GROUNDING_THRESHOLD)
+    + '<div style="margin-left:auto;font-family:var(--f-m);font-size:10px;color:' + (allPass ? 'var(--green)' : 'var(--mg)') + '">'
+    + (allPass ? 'All targets met' : 'Scores are guidance') + '</div>';
+}
+
+function setGauge(id, score, pass) {
+  var el = document.getElementById(id + '-score');
+  var box = document.getElementById('gauge-' + id);
+  if (el) el.textContent = score;
+  if (box) { box.classList.remove('pass', 'fail'); box.classList.add(score >= pass ? 'pass' : 'fail'); }
+}
+
+// ── SMART FIX - structural=instant, content=targeted AI, manual=jump to field ──
+async function applyFix(label, kind) {
+  // STRUCTURAL - fix instantly in browser, no API, no regeneration
+  if (kind === 'structural') {
+    applyStructuralFix(label);
+    return;
+  }
+  // MANUAL - jump to the relevant edit field
+  if (kind === 'manual') {
+    switchStage(5);
+    notify('Edit the field directly: ' + label, 'success');
+    var map = { 'Keyword in title':'out-title-input', 'Title length 30-60 chars':'out-title-input',
+      'Meta description 120-160 chars':'out-meta-input', 'Clean slug':'out-slug-input' };
+    var fid = map[label];
+    if (fid) { var fe = document.getElementById(fid); if (fe) { fe.focus(); fe.scrollIntoView({behavior:'smooth',block:'center'}); } }
+    return;
+  }
+  // CONTENT - targeted single-section rewrite via /fix-section (NOT full regenerate)
+  notify('AI is fixing only: ' + label + '...', 'success');
+  try {
+    var r = await fetch(PROXY + '/fix-section', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ content: state.content, weakness: label, topic: state.topic })
+    });
+    var d = await r.json();
+    if (d.error) throw new Error(d.error);
+    state.content = d.content;
+    // Re-extract FAQ from the fixed content
+    reparseFaqFromContent();
+    rebuildStyledHtml();
+    populateEditPanel();
+    runOptimize();
+    notify('Fixed: ' + label, 'success');
+  } catch(e) {
+    notify('Fix failed: ' + e.message, 'error');
+  }
+}
+
+// Instant structural fixes - no API call
+function applyStructuralFix(label) {
+  if (label === 'Internal links present') {
+    if (!state.internalLinks || !state.internalLinks.length) {
+      state.internalLinks = ['World Cup 2026 Complete Guide', 'World Cup 2026 Schedule and Fixtures'];
+    }
+    // Append INTERNAL markers to content if not present
+    if (state.content.indexOf('[INTERNAL') === -1) {
+      state.content += '\n\n[INTERNAL: World Cup 2026 Complete Guide]\n[INTERNAL: World Cup 2026 Schedule and Fixtures]';
+    }
+    notify('Internal links added', 'success');
+  } else if (label === 'Has data table') {
+    // Insert a simple markdown comparison table the editor can fill
+    var table = '\n\n## Quick Comparison\n\n| Item | Detail | Value |\n| --- | --- | --- |\n| Option 1 | Description | Data |\n| Option 2 | Description | Data |\n| Option 3 | Description | Data |\n\n';
+    state.content += table;
+    notify('Comparison table added - edit the cells in the body', 'success');
+  } else if (label === 'Quick answer box') {
+    if (!state.quickAnswer) {
+      var firstSentence = (state.content.split('.')[0] || state.topic).trim() + '.';
+      state.quickAnswer = firstSentence.slice(0, 200);
+    }
+    notify('Quick answer box added', 'success');
+  } else if (label === 'Key takeaways block') {
+    if (!state.takeaways || !state.takeaways.length) {
+      var paras = state.content.split('\n\n').filter(function(p){ return p.length > 40 && !p.startsWith('#'); });
+      state.takeaways = paras.slice(0, 3).map(function(p){ return p.split('.')[0].replace(/\*\*/g,'').trim() + '.'; });
+    }
+    notify('Key takeaways added', 'success');
+  } else if (label === 'Schema markup present') {
+    notify('Schema is added automatically - press Update Article', 'success');
+  }
+  rebuildStyledHtml();
+  populateEditPanel();
+  runOptimize();
+}
+
+// Re-extract FAQ from edited markdown body
+function reparseFaqFromContent() {
+  var content = state.content || '';
+  var faqs = [];
+  var chunks = content.split(/\*\*Q:\*\*/i).filter(function(s){ return s.trim(); });
+  chunks.forEach(function(chunk) {
+    var aIdx = chunk.search(/\*\*A:\*\*/i);
+    if (aIdx === -1) return;
+    var q = chunk.slice(0, aIdx).replace(/\*\*/g,'').replace(/^[?:\s]+/,'').trim();
+    var a = chunk.slice(aIdx).replace(/^\*\*A:\*\*/i,'').replace(/\*\*Q:[\s\S]*/i,'').replace(/\*\*/g,'').trim().replace(/\n/g,' ').replace(/\s+/g,' ');
+    if (q && a && q.length > 3 && a.length > 10) faqs.push({q:q, a:a});
+  });
+  if (faqs.length >= 1) state.faq = faqs;
+}
+
+function gatePublish(allowed) {
+  // Gate removed - scores are guidance only. Publish always enabled.
+  ['btn-go-publish', 'btn-publish'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) { b.disabled = false; b.style.opacity = '1'; b.title = ''; }
+  });
+}
+
+
+// Init readtime
+updateReadtime();
+</script>
+</body>
+
+</html>
